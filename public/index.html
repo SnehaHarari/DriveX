@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DriveX — Premium Car Rentals</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Hero */
+    .hero {
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 0 40px;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(232,255,71,0.06) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 40% at 20% 80%, rgba(255,107,53,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    .hero-eyebrow span { color: var(--accent); }
+
+    .hero-title {
+      font-size: clamp(52px, 8vw, 100px);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -3px;
+      max-width: 700px;
+      animation: fadeUp 0.7s 0.1s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-title em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      margin-top: 28px;
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 480px;
+      font-weight: 300;
+      animation: fadeUp 0.7s 0.2s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-cta {
+      margin-top: 48px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    .hero-cta .btn { font-size: 16px; padding: 14px 32px; }
+
+    /* Quick search */
+    .quick-search {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      align-items: end;
+      max-width: 900px;
+      margin: 0 auto;
+      transform: translateY(-30px);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 0 40px 80px;
+    }
+
+    .stat-item {
+      background: var(--surface);
+      padding: 40px 32px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label { color: var(--muted); font-size: 13px; }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: border-color var(--transition);
+    }
+
+    .feature-card:hover { border-color: #444; }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc { color: var(--muted); font-size: 14px; }
+
+    /* CTA section */
+    .cta-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 40px;
+      text-align: center;
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    @keyframes fadeUp {
+      from { transform: translateY(24px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .hero { padding: 60px 20px; min-height: 70vh; }
+      .stats { grid-template-columns: repeat(2, 1fr); margin: 0 20px 50px; }
+      .quick-search { margin: 0 20px; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">Drive<span>X</span></a>
+  <ul class="nav-links">
+    <li><a href="/" class="active">Home</a></li>
+    <li><a href="/cars">Cars</a></li>
+    <li><a href="/bookings">My Bookings</a></li>
+  </ul>
+  <div class="nav-actions"></div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">🚗 <span>Premium Fleet</span> · Available Now</div>
+    <h1 class="hero-title">Drive Your<br><em>Dream</em><br>Car Today</h1>
+    <p class="hero-sub">Handpicked premium vehicles for every occasion. Seamless booking, transparent pricing.</p>
+    <div class="hero-cta">
+      <a href="/cars" class="btn btn-primary">Browse Cars →</a>
+      <a href="/register" class="btn btn-outline">Join Free</a>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Search -->
+<div style="padding: 0 40px; max-width:1200px; margin: 0 auto;">
+  <div class="quick-search">
+    <div class="form-group">
+      <label>Car Type</label>
+      <select class="form-control" id="qs-type">
+        <option value="">All Types</option>
+        <option>Sedan</option>
+        <option>SUV</option>
+        <option>Sports</option>
+        <option>Electric</option>
+        <option>Luxury</option>
+        <option>Hatchback</option>
+        <option>MUV</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Fuel Type</label>
+      <select class="form-control" id="qs-fuel">
+        <option value="">Any Fuel</option>
+        <option>Petrol</option>
+        <option>Diesel</option>
+        <option>Electric</option>
+        <option>Hybrid</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Min. Seats</label>
+      <select class="form-control" id="qs-seats">
+        <option value="">Any</option>
+        <option value="2">2+</option>
+        <option value="5">5+</option>
+        <option value="7">7+</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="quickSearch()" style="height:45px">Search Cars</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-item"><div class="stat-number">100+</div><div class="stat-label">Premium Cars</div></div>
+  <div class="stat-item"><div class="stat-number">5K+</div><div class="stat-label">Happy Customers</div></div>
+  <div class="stat-item"><div class="stat-number">20+</div><div class="stat-label">Cities Covered</div></div>
+  <div class="stat-item"><div class="stat-number">4.9★</div><div class="stat-label">Average Rating</div></div>
+</div>
+
+<!-- Featured Cars -->
+<section class="section">
+  <h2 class="section-title">Featured Cars</h2>
+  <p class="section-sub">Our most popular picks this week</p>
+  <div class="cars-grid" id="featured-grid">
+    <!-- Skeleton loaders -->
+    <div class="car-card" style="border:none">
+      <div class="skeleton" style="height:200px"></div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+        <div class="skeleton" style="height:16px;width:60%"></div>
+        <div class="skeleton" style="height:22px;width:80%"></div>
+        <div class="skeleton" style="height:14px;width:40%"></div>
+      </div>
+    </div>
+    <div class="car-card" style="border:none">
+      <div class="skeleton" style="height:200px"></div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+        <div class="skeleton" style="height:16px;width:60%"></div>
+        <div class="skeleton" style="height:22px;width:80%"></div>
+        <div class="skeleton" style="height:14px;width:40%"></div>
+      </div>
+    </div>
+    <div class="car-card" style="border:none">
+      <div class="skeleton" style="height:200px"></div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+        <div class="skeleton" style="height:16px;width:60%"></div>
+        <div class="skeleton" style="height:22px;width:80%"></div>
+        <div class="skeleton" style="height:14px;width:40%"></div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:40px">
+    <a href="/cars" class="btn btn-outline">View All Cars →</a>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section" style="padding-top:0">
+  <h2 class="section-title">Why DriveX?</h2>
+  <p class="section-sub">Everything you need, nothing you don't</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Instant Booking</div>
+      <p class="feature-desc">Book any car in under 2 minutes. No paperwork, no waiting.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <div class="feature-title">Fully Insured</div>
+      <p class="feature-desc">Every vehicle comes with comprehensive insurance coverage.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <div class="feature-title">Best Prices</div>
+      <p class="feature-desc">Transparent pricing with no hidden fees. What you see is what you pay.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔑</div>
+      <div class="feature-title">Doorstep Delivery</div>
+      <p class="feature-desc">We bring the car to your location — home, office, or hotel.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 style="font-size:clamp(32px,5vw,56px);font-weight:800;margin-bottom:16px">Ready to Roll?</h2>
+  <p style="color:var(--muted);font-size:17px;margin-bottom:36px">Create your free account and get your first booking in minutes.</p>
+  <a href="/register" class="btn btn-primary" style="font-size:16px;padding:14px 36px">Get Started Free →</a>
+</section>
+
+<footer>
+  <p>© 2025 DriveX Car Rentals · Made with ♥ in India</p>
+</footer>
+
+<div id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+  // Load featured cars
+  async function loadFeatured() {
+    try {
+      const cars = await api('/cars');
+      const grid = document.getElementById('featured-grid');
+      const featured = cars.slice(0, 3);
+
+      if (featured.length === 0) {
+        grid.innerHTML = '<p style="color:var(--muted)">No cars available.</p>';
+        return;
+      }
+
+      grid.innerHTML = featured.map(car => `
+        <div class="car-card">
+          <img src="${car.image_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'}" 
+               alt="${car.name}" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'" />
+          <div class="car-card-body">
+            <div class="car-meta">
+              <span class="tag ${car.fuel.toLowerCase()}">${car.fuel}</span>
+              <span class="tag">${car.type}</span>
+              <span class="tag">${car.seats} Seats</span>
+            </div>
+            <div class="car-name">${car.brand} ${car.name}</div>
+            <div class="car-price">
+              <div>
+                <div class="price">₹${Number(car.price_per_day).toLocaleString('en-IN')}</div>
+                <div class="price-label">per day</div>
+              </div>
+              <a href="/cars" class="btn btn-primary btn-sm">Book Now</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch {
+      document.getElementById('featured-grid').innerHTML = '<p style="color:var(--muted)">Could not load cars.</p>';
+    }
+  }
+
+  function quickSearch() {
+    const type = document.getElementById('qs-type').value;
+    const fuel = document.getElementById('qs-fuel').value;
+    const seats = document.getElementById('qs-seats').value;
+    let url = '/cars?';
+    if (type) url += `type=${encodeURIComponent(type)}&`;
+    if (fuel) url += `fuel=${encodeURIComponent(fuel)}&`;
+    if (seats) url += `seats=${seats}`;
+    window.location.href = url;
+  }
+
+  loadFeatured();
+</script>
+</body>
+</html>

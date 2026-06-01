@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — DriveX</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .sidebar-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      padding: 0 24px 32px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-logo span { color: var(--accent); }
+    .sidebar-badge { font-size: 10px; background: var(--accent); color: #000; padding: 2px 8px; border-radius: 100px; font-weight: 700; margin-left: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent); background: rgba(232,255,71,0.06); }
+    .nav-item .icon { font-size: 18px; width: 24px; }
+
+    /* Main content */
+    .admin-main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    /* Stat cards */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .stat-card-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card-label { color: var(--muted); font-size: 13px; }
+
+    /* Table */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .data-table tr:hover td { background: var(--surface2); }
+
+    .data-table img {
+      width: 60px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* Section tab */
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    /* Form card */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+
+    .form-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: auto;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .admin-main { margin-left: 0; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">Drive<span>X</span> <span class="sidebar-badge">ADMIN</span></div>
+  <button class="nav-item active" onclick="showTab('dashboard', this)">
+    <span class="icon">📊</span> Dashboard
+  </button>
+  <button class="nav-item" onclick="showTab('cars', this)">
+    <span class="icon">🚗</span> Manage Cars
+  </button>
+  <button class="nav-item" onclick="showTab('bookings', this)">
+    <span class="icon">📋</span> Bookings
+  </button>
+  <button class="nav-item" onclick="showTab('users', this)">
+    <span class="icon">👥</span> Users
+  </button>
+  <div style="flex:1"></div>
+  <button class="nav-item" onclick="window.location.href='/'">
+    <span class="icon">🏠</span> View Site
+  </button>
+  <button class="nav-item" onclick="logout()">
+    <span class="icon">🚪</span> Logout
+  </button>
+</nav>
+
+<main class="admin-main">
+
+  <!-- Dashboard Tab -->
+  <div class="tab active" id="tab-dashboard">
+    <h1 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px">Dashboard</h1>
+    <p style="color:var(--muted);margin-bottom:32px">Overview of your car rental business</p>
+
+    <div class="stat-cards" id="stat-cards">
+      <div class="stat-card"><div class="stat-card-value skeleton" style="height:36px;width:60px"></div><div class="stat-card-label">Total Cars</div></div>
+      <div class="stat-card"><div class="stat-card-value skeleton" style="height:36px;width:60px"></div><div class="stat-card-label">Users</div></div>
+      <div class="stat-card"><div class="stat-card-value skeleton" style="height:36px;width:60px"></div><div class="stat-card-label">Bookings</div></div>
+      <div class="stat-card"><div class="stat-card-value skeleton" style="height:36px;width:80px"></div><div class="stat-card-label">Revenue</div></div>
+      <div class="stat-card"><div class="stat-card-value skeleton" style="height:36px;width:60px"></div><div class="stat-card-label">Pending</div></div>
+    </div>
+  </div>
+
+  <!-- Cars Tab -->
+  <div class="tab" id="tab-cars">
+    <h1 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:32px">Manage Cars</h1>
+
+    <!-- Add Car Form -->
+    <div class="form-card">
+      <h3 id="form-title">➕ Add New Car</h3>
+      <div id="form-alert"></div>
+      <input type="hidden" id="edit-car-id" />
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Car Name *</label>
+          <input class="form-control" id="f-name" placeholder="e.g. Swift Dzire" />
+        </div>
+        <div class="form-group">
+          <label>Brand *</label>
+          <input class="form-control" id="f-brand" placeholder="e.g. Maruti" />
+        </div>
+        <div class="form-group">
+          <label>Type *</label>
+          <select class="form-control" id="f-type">
+            <option>Sedan</option><option>SUV</option><option>Hatchback</option>
+            <option>Sports</option><option>Electric</option><option>Luxury</option><option>MUV</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fuel *</label>
+          <select class="form-control" id="f-fuel">
+            <option>Petrol</option><option>Diesel</option><option>Electric</option><option>Hybrid</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Seats</label>
+          <input class="form-control" id="f-seats" type="number" value="5" min="2" max="9" />
+        </div>
+        <div class="form-group">
+          <label>Transmission</label>
+          <select class="form-control" id="f-trans">
+            <option>Manual</option><option>Automatic</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price/Day (₹) *</label>
+          <input class="form-control" id="f-price" type="number" placeholder="1499" />
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input class="form-control" id="f-img" placeholder="https://..." />
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>Description</label>
+        <input class="form-control" id="f-desc" placeholder="Short description of the car" />
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>Features (comma separated)</label>
+        <input class="form-control" id="f-features" placeholder="AC,Sunroof,Touchscreen" />
+      </div>
+      <div style="display:flex;gap:12px;margin-top:24px">
+        <button class="btn btn-primary" onclick="saveCar()">Save Car</button>
+        <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Cars Table -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Image</th><th>Name</th><th>Type</th><th>Fuel</th>
+            <th>Seats</th><th>Price/Day</th><th>Available</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cars-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bookings Tab -->
+  <div class="tab" id="tab-bookings">
+    <h1 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:32px">All Bookings</h1>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>User</th><th>Car</th><th>Dates</th><th>Days</th><th>Total</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="bookings-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div class="tab" id="tab-users">
+    <h1 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:32px">Users</h1>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th><th>Action</th></tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+  // Auth guard
+  if (!isLoggedIn() || !isAdmin()) window.location.href = '/login';
+
+  // Tab switching
+  function showTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.add('active');
+    el.classList.add('active');
+
+    if (name === 'dashboard') loadStats();
+    if (name === 'cars') loadAdminCars();
+    if (name === 'bookings') loadAdminBookings();
+    if (name === 'users') loadUsers();
+  }
+
+  // ── Dashboard ────────────────────────────────
+  async function loadStats() {
+    try {
+      const s = await api('/admin/stats');
+      document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card"><div class="stat-card-value">${s.total_cars}</div><div class="stat-card-label">Total Cars</div></div>
+        <div class="stat-card"><div class="stat-card-value">${s.total_users}</div><div class="stat-card-label">Users</div></div>
+        <div class="stat-card"><div class="stat-card-value">${s.total_bookings}</div><div class="stat-card-label">Bookings</div></div>
+        <div class="stat-card"><div class="stat-card-value">₹${Number(s.total_revenue).toLocaleString('en-IN')}</div><div class="stat-card-label">Revenue</div></div>
+        <div class="stat-card"><div class="stat-card-value">${s.pending_bookings}</div><div class="stat-card-label">Pending</div></div>
+      `;
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // ── Cars ──────────────────────────────────────
+  async function loadAdminCars() {
+    try {
+      const cars = await api('/cars?available=all');
+      const tbody = document.getElementById('cars-tbody');
+      if (!cars.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">No cars found.</td></tr>'; return; }
+
+      tbody.innerHTML = cars.map(c => `
+        <tr>
+          <td><img src="${c.image_url || ''}" alt="${c.name}" onerror="this.style.display='none'" /></td>
+          <td><strong>${c.brand} ${c.name}</strong></td>
+          <td>${c.type}</td>
+          <td>${c.fuel}</td>
+          <td>${c.seats}</td>
+          <td>₹${Number(c.price_per_day).toLocaleString('en-IN')}</td>
+          <td>
+            <label style="cursor:pointer;display:flex;align-items:center;gap:8px">
+              <input type="checkbox" ${c.available ? 'checked' : ''} onchange="toggleAvailable(${c.id}, this.checked)" />
+              ${c.available ? '<span style="color:#48c78e;font-size:12px">Yes</span>' : '<span style="color:var(--muted);font-size:12px">No</span>'}
+            </label>
+          </td>
+          <td>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline btn-sm" onclick="editCar(${c.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCar(${c.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function saveCar() {
+    const alertBox = document.getElementById('form-alert');
+    const editId = document.getElementById('edit-car-id').value;
+
+    const body = {
+      name: document.getElementById('f-name').value.trim(),
+      brand: document.getElementById('f-brand').value.trim(),
+      type: document.getElementById('f-type').value,
+      fuel: document.getElementById('f-fuel').value,
+      seats: parseInt(document.getElementById('f-seats').value) || 5,
+      transmission: document.getElementById('f-trans').value,
+      price_per_day: parseFloat(document.getElementById('f-price').value),
+      image_url: document.getElementById('f-img').value.trim(),
+      description: document.getElementById('f-desc').value.trim(),
+      features: document.getElementById('f-features').value.trim(),
+      available: true
+    };
+
+    if (!body.name || !body.brand || !body.price_per_day) {
+      alertBox.innerHTML = '<div class="alert alert-error">Name, brand, and price are required.</div>';
+      return;
+    }
+
+    try {
+      if (editId) {
+        await api(`/cars/${editId}`, { method: 'PUT', body });
+        toast('Car updated!');
+      } else {
+        await api('/cars', { method: 'POST', body });
+        toast('Car added!');
+      }
+      resetForm();
+      loadAdminCars();
+    } catch (err) {
+      alertBox.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    }
+  }
+
+  async function editCar(id) {
+    try {
+      const car = await api(`/cars/${id}`);
+      document.getElementById('edit-car-id').value = car.id;
+      document.getElementById('f-name').value = car.name;
+      document.getElementById('f-brand').value = car.brand;
+      document.getElementById('f-type').value = car.type;
+      document.getElementById('f-fuel').value = car.fuel;
+      document.getElementById('f-seats').value = car.seats;
+      document.getElementById('f-trans').value = car.transmission;
+      document.getElementById('f-price').value = car.price_per_day;
+      document.getElementById('f-img').value = car.image_url || '';
+      document.getElementById('f-desc').value = car.description || '';
+      document.getElementById('f-features').value = car.features || '';
+      document.getElementById('form-title').textContent = '✏️ Edit Car';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function deleteCar(id) {
+    if (!confirm('Delete this car? This cannot be undone.')) return;
+    try {
+      await api(`/cars/${id}`, { method: 'DELETE' });
+      toast('Car deleted.');
+      loadAdminCars();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function toggleAvailable(id, available) {
+    try {
+      const car = await api(`/cars/${id}`);
+      await api(`/cars/${id}`, { method: 'PUT', body: { ...car, available } });
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  function resetForm() {
+    document.getElementById('edit-car-id').value = '';
+    document.getElementById('form-title').textContent = '➕ Add New Car';
+    document.getElementById('form-alert').innerHTML = '';
+    ['f-name','f-brand','f-price','f-img','f-desc','f-features'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-seats').value = '5';
+  }
+
+  // ── Bookings ──────────────────────────────────
+  async function loadAdminBookings() {
+    try {
+      const bookings = await api('/bookings/all');
+      const tbody = document.getElementById('bookings-tbody');
+      if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">No bookings yet.</td></tr>'; return; }
+
+      tbody.innerHTML = bookings.map(b => {
+        const pickup = new Date(b.pickup_date).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+        const ret = new Date(b.return_date).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+        return `
+          <tr>
+            <td style="color:var(--muted);font-size:12px">#${b.id}</td>
+            <td>
+              <div style="font-weight:500">${b.user_name}</div>
+              <div style="color:var(--muted);font-size:12px">${b.user_email}</div>
+            </td>
+            <td>${b.brand} ${b.car_name}</td>
+            <td style="font-size:13px">${pickup} → ${ret}</td>
+            <td>${b.total_days}d</td>
+            <td style="color:var(--accent);font-weight:600">₹${Number(b.total_price).toLocaleString('en-IN')}</td>
+            <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+            <td>
+              <select class="form-control" style="padding:6px 10px;font-size:13px" onchange="updateStatus(${b.id}, this.value)">
+                <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
+                <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
+                <option value="completed" ${b.status==='completed'?'selected':''}>Completed</option>
+                <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      await api(`/bookings/${id}/status`, { method: 'PATCH', body: { status } });
+      toast(`Status updated to ${status}.`);
+      loadAdminBookings();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  // ── Users ─────────────────────────────────────
+  async function loadUsers() {
+    try {
+      const users = await api('/admin/users');
+      const tbody = document.getElementById('users-tbody');
+      if (!users.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No users found.</td></tr>'; return; }
+
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.name}</strong></td>
+          <td>${u.email}</td>
+          <td>${u.phone || '—'}</td>
+          <td><span class="status-badge ${u.role==='admin' ? 'status-confirmed' : 'status-pending'}">${u.role}</span></td>
+          <td style="color:var(--muted);font-size:13px">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+          <td>${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Delete</button>` : '—'}</td>
+        </tr>
+      `).join('');
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function deleteUser(id) {
+    if (!confirm('Delete this user and all their bookings?')) return;
+    try {
+      await api(`/admin/users/${id}`, { method: 'DELETE' });
+      toast('User deleted.');
+      loadUsers();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  // Load dashboard on start
+  loadStats();
+</script>
+</body>
+</html>

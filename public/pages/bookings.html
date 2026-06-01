@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bookings — DriveX</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .page-header { padding: 60px 40px 40px; max-width:1200px; margin:0 auto; }
+
+    .bookings-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .booking-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      transition: border-color var(--transition);
+    }
+
+    .booking-card:hover { border-color: #444; }
+
+    .booking-card img {
+      width: 120px;
+      height: 84px;
+      object-fit: cover;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .booking-info { flex: 1; }
+    .booking-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .booking-meta { color: var(--muted); font-size: 13px; display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+    .booking-meta span { display: flex; align-items: center; gap: 4px; }
+    .booking-price { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); }
+    .booking-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+    .empty-state div { font-size: 52px; margin-bottom: 16px; }
+    .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 22px; margin-bottom: 8px; color: var(--text); }
+
+    @media (max-width: 600px) {
+      .booking-card { flex-direction: column; }
+      .booking-card img { width: 100%; height: 160px; }
+      .page-header { padding: 40px 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">Drive<span>X</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/cars">Cars</a></li>
+    <li><a href="/bookings" class="active">My Bookings</a></li>
+  </ul>
+  <div class="nav-actions"></div>
+</nav>
+
+<div class="page-header">
+  <h1 class="section-title">My Bookings</h1>
+  <p class="section-sub">Your rental history and active bookings</p>
+</div>
+
+<div style="padding: 0 40px 80px; max-width:1200px; margin:0 auto">
+  <div id="bookings-list" class="bookings-list">
+    <!-- Skeleton -->
+    <div class="booking-card" style="border:none">
+      <div class="skeleton" style="width:120px;height:84px;border-radius:10px;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <div class="skeleton" style="height:20px;width:40%"></div>
+        <div class="skeleton" style="height:14px;width:60%"></div>
+        <div class="skeleton" style="height:14px;width:30%"></div>
+      </div>
+    </div>
+    <div class="booking-card" style="border:none">
+      <div class="skeleton" style="width:120px;height:84px;border-radius:10px;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <div class="skeleton" style="height:20px;width:40%"></div>
+        <div class="skeleton" style="height:14px;width:60%"></div>
+        <div class="skeleton" style="height:14px;width:30%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+  if (!isLoggedIn()) window.location.href = '/login';
+
+  async function loadBookings() {
+    try {
+      const bookings = await api('/bookings/my');
+      const list = document.getElementById('bookings-list');
+
+      if (bookings.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div>🚗</div>
+            <h3>No bookings yet</h3>
+            <p style="margin-bottom:24px">You haven't booked any cars yet. Start exploring!</p>
+            <a href="/cars" class="btn btn-primary">Browse Cars</a>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = bookings.map(b => {
+        const pickup = new Date(b.pickup_date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+        const ret = new Date(b.return_date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+        const canCancel = b.status === 'pending';
+
+        return `
+          <div class="booking-card" id="booking-${b.id}">
+            <img src="${b.image_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'}"
+                 alt="${b.car_name}" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'" />
+            <div class="booking-info">
+              <div class="booking-name">${b.brand} ${b.car_name}</div>
+              <div class="booking-meta">
+                <span>📅 ${pickup} → ${ret}</span>
+                <span>📍 ${b.pickup_location || 'Not specified'}</span>
+                <span>⏱ ${b.total_days} day${b.total_days > 1 ? 's' : ''}</span>
+                <span>🚗 ${b.type}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <div class="booking-price">₹${Number(b.total_price).toLocaleString('en-IN')}</div>
+                <span class="status-badge status-${b.status}">${b.status}</span>
+              </div>
+              <div class="booking-actions">
+                ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel Booking</button>` : ''}
+                <a href="/cars" class="btn btn-outline btn-sm">Book Again</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      document.getElementById('bookings-list').innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    }
+  }
+
+  async function cancelBooking(id) {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      await api(`/bookings/${id}/cancel`, { method: 'PATCH' });
+      toast('Booking cancelled.');
+      loadBookings();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  loadBookings();
+</script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Cars — DriveX</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .page-header {
+      padding: 60px 40px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .search-row input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .modal-form { display: flex; flex-direction: column; gap: 16px; }
+
+    .car-info-row {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .car-info-row img { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; }
+
+    #book-summary {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 14px;
+    }
+
+    #book-summary .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+
+    #book-summary .total {
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+      padding-top: 10px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .page-header { padding: 40px 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">Drive<span>X</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/cars" class="active">Cars</a></li>
+    <li><a href="/bookings">My Bookings</a></li>
+  </ul>
+  <div class="nav-actions"></div>
+</nav>
+
+<div class="page-header">
+  <h1 class="section-title">Browse Cars</h1>
+  <p class="section-sub">Find your perfect ride</p>
+
+  <!-- Search -->
+  <div class="search-row">
+    <input type="text" class="form-control" id="search-input" placeholder="Search by name or brand…" oninput="filterCars()" />
+    <select class="form-control" id="fuel-filter" onchange="filterCars()" style="max-width:150px">
+      <option value="">All Fuels</option>
+      <option>Petrol</option>
+      <option>Diesel</option>
+      <option>Electric</option>
+      <option>Hybrid</option>
+    </select>
+    <select class="form-control" id="seats-filter" onchange="filterCars()" style="max-width:140px">
+      <option value="">Any Seats</option>
+      <option value="2">2+</option>
+      <option value="5">5+</option>
+      <option value="7">7+</option>
+    </select>
+  </div>
+
+  <!-- Type filter chips -->
+  <div class="filter-bar" id="type-filter">
+    <button class="filter-chip active" onclick="setType('', this)">All</button>
+    <button class="filter-chip" onclick="setType('Sedan', this)">Sedan</button>
+    <button class="filter-chip" onclick="setType('SUV', this)">SUV</button>
+    <button class="filter-chip" onclick="setType('Hatchback', this)">Hatchback</button>
+    <button class="filter-chip" onclick="setType('Sports', this)">Sports</button>
+    <button class="filter-chip" onclick="setType('Electric', this)">Electric</button>
+    <button class="filter-chip" onclick="setType('Luxury', this)">Luxury</button>
+    <button class="filter-chip" onclick="setType('MUV', this)">MUV</button>
+  </div>
+</div>
+
+<div style="padding: 0 40px 80px; max-width:1200px; margin:0 auto">
+  <div class="cars-grid" id="cars-grid">
+    <!-- Skeletons -->
+    <div class="car-card" style="border:none"><div class="skeleton" style="height:200px"></div><div style="padding:20px;display:flex;flex-direction:column;gap:10px"><div class="skeleton" style="height:14px;width:50%"></div><div class="skeleton" style="height:20px;width:70%"></div><div class="skeleton" style="height:14px;width:30%"></div></div></div>
+    <div class="car-card" style="border:none"><div class="skeleton" style="height:200px"></div><div style="padding:20px;display:flex;flex-direction:column;gap:10px"><div class="skeleton" style="height:14px;width:50%"></div><div class="skeleton" style="height:20px;width:70%"></div><div class="skeleton" style="height:14px;width:30%"></div></div></div>
+    <div class="car-card" style="border:none"><div class="skeleton" style="height:200px"></div><div style="padding:20px;display:flex;flex-direction:column;gap:10px"><div class="skeleton" style="height:14px;width:50%"></div><div class="skeleton" style="height:20px;width:70%"></div><div class="skeleton" style="height:14px;width:30%"></div></div></div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Book Car</h2>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="car-info-row">
+      <img id="modal-car-img" src="" alt="" />
+      <div>
+        <div id="modal-car-name" style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px"></div>
+        <div id="modal-car-type" style="color:var(--muted);font-size:13px;margin-top:4px"></div>
+      </div>
+    </div>
+    <div id="alert-box"></div>
+    <div class="modal-form">
+      <div class="form-group">
+        <label>Pickup Location</label>
+        <input class="form-control" type="text" id="pickup-location" placeholder="e.g. Mumbai Airport" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label>Pickup Date</label>
+          <input class="form-control" type="date" id="pickup-date" onchange="calcPrice()" />
+        </div>
+        <div class="form-group">
+          <label>Return Date</label>
+          <input class="form-control" type="date" id="return-date" onchange="calcPrice()" />
+        </div>
+      </div>
+      <div id="book-summary" style="display:none">
+        <div class="row"><span style="color:var(--muted)">Price/day</span><span id="s-ppd">—</span></div>
+        <div class="row"><span style="color:var(--muted)">Days</span><span id="s-days">—</span></div>
+        <div class="row total"><span>Total</span><span id="s-total">—</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="confirmBooking()" style="width:100%">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+  let allCars = [];
+  let selectedType = '';
+  let selectedCar = null;
+
+  // Load cars
+  async function loadCars() {
+    try {
+      allCars = await api('/cars');
+      renderCars(allCars);
+
+      // Apply URL params
+      const params = new URLSearchParams(location.search);
+      if (params.get('type')) {
+        selectedType = params.get('type');
+        document.querySelectorAll('.filter-chip').forEach(c => {
+          c.classList.toggle('active', c.textContent === selectedType || (selectedType === '' && c.textContent === 'All'));
+        });
+      }
+      if (params.get('fuel')) document.getElementById('fuel-filter').value = params.get('fuel');
+      if (params.get('seats')) document.getElementById('seats-filter').value = params.get('seats');
+      filterCars();
+    } catch {
+      document.getElementById('cars-grid').innerHTML = `<p style="color:var(--muted);grid-column:1/-1">Failed to load cars. Make sure the server is running.</p>`;
+    }
+  }
+
+  function renderCars(cars) {
+    const grid = document.getElementById('cars-grid');
+    if (cars.length === 0) {
+      grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">No cars match your filters.</p>';
+      return;
+    }
+
+    grid.innerHTML = cars.map(car => `
+      <div class="car-card">
+        <img src="${car.image_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'}"
+             alt="${car.name}" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'" />
+        <div class="car-card-body">
+          <div class="car-meta">
+            <span class="tag ${car.fuel.toLowerCase()}">${car.fuel}</span>
+            <span class="tag">${car.type}</span>
+            <span class="tag">${car.seats} Seats</span>
+            <span class="tag">${car.transmission}</span>
+          </div>
+          <div class="car-name">${car.brand} ${car.name}</div>
+          ${car.description ? `<div style="color:var(--muted);font-size:13px;line-height:1.5">${car.description}</div>` : ''}
+          <div class="car-price">
+            <div>
+              <div class="price">₹${Number(car.price_per_day).toLocaleString('en-IN')}</div>
+              <div class="price-label">per day</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModal(${JSON.stringify(car).replace(/"/g, '&quot;')})">Book Now</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function setType(type, el) {
+    selectedType = type;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterCars();
+  }
+
+  function filterCars() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const fuel = document.getElementById('fuel-filter').value;
+    const seats = parseInt(document.getElementById('seats-filter').value) || 0;
+
+    const filtered = allCars.filter(car => {
+      const matchType = !selectedType || car.type === selectedType;
+      const matchFuel = !fuel || car.fuel === fuel;
+      const matchSeats = !seats || car.seats >= seats;
+      const matchSearch = !search || car.name.toLowerCase().includes(search) || car.brand.toLowerCase().includes(search);
+      return matchType && matchFuel && matchSeats && matchSearch;
+    });
+
+    renderCars(filtered);
+  }
+
+  // Booking modal
+  function openModal(car) {
+    if (!isLoggedIn()) { window.location.href = '/login'; return; }
+    selectedCar = car;
+    document.getElementById('modal-car-name').textContent = `${car.brand} ${car.name}`;
+    document.getElementById('modal-car-type').textContent = `${car.type} · ${car.fuel} · ${car.seats} seats`;
+    document.getElementById('modal-car-img').src = car.image_url;
+    document.getElementById('alert-box').innerHTML = '';
+    document.getElementById('book-summary').style.display = 'none';
+    document.getElementById('pickup-date').value = '';
+    document.getElementById('return-date').value = '';
+
+    // Set min date = today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('pickup-date').min = today;
+    document.getElementById('return-date').min = today;
+
+    document.getElementById('bookingModal').classList.add('active');
+  }
+
+  function closeModal() { document.getElementById('bookingModal').classList.remove('active'); }
+
+  function calcPrice() {
+    const d1 = document.getElementById('pickup-date').value;
+    const d2 = document.getElementById('return-date').value;
+    if (!d1 || !d2 || !selectedCar) return;
+    const days = Math.ceil((new Date(d2) - new Date(d1)) / 86400000);
+    if (days <= 0) return;
+    const total = days * selectedCar.price_per_day;
+    document.getElementById('s-ppd').textContent = `₹${Number(selectedCar.price_per_day).toLocaleString('en-IN')}`;
+    document.getElementById('s-days').textContent = days;
+    document.getElementById('s-total').textContent = `₹${Number(total).toLocaleString('en-IN')}`;
+    document.getElementById('book-summary').style.display = 'block';
+  }
+
+  async function confirmBooking() {
+    const alertBox = document.getElementById('alert-box');
+    const pickup = document.getElementById('pickup-date').value;
+    const ret = document.getElementById('return-date').value;
+    const location = document.getElementById('pickup-location').value;
+
+    if (!pickup || !ret) {
+      alertBox.innerHTML = '<div class="alert alert-error">Please select pickup and return dates.</div>';
+      return;
+    }
+
+    try {
+      await api('/bookings', { method: 'POST', body: { car_id: selectedCar.id, pickup_date: pickup, return_date: ret, pickup_location: location } });
+      closeModal();
+      toast('Booking confirmed! 🎉');
+    } catch (err) {
+      alertBox.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    }
+  }
+
+  loadCars();
+</script>
+</body>
+</html>
